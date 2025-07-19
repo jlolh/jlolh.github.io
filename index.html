@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學校點名與計分系統</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>學校點名與計分系統</h1>
+            <button id="reset-data-btn" class="btn btn--secondary">重置資料</button>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="attendance">點名</button>
+            <button class="tab-btn" data-tab="scoring">計分</button>
+        </div>
+
+        <!-- Common Controls -->
+        <div class="common-controls">
+            <div class="control-group">
+                <label for="date-select" class="form-label">選擇日期：</label>
+                <input type="date" id="date-select" class="form-control">
+            </div>
+            <div class="control-group">
+                <label for="class-select" class="form-label">選擇班級：</label>
+                <select id="class-select" class="form-control">
+                    <option value="">請選擇班級</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Attendance View -->
+        <div id="attendance-view" class="tab-content active">
+            <div class="summary-panel">
+                <div class="summary-card">
+                    <div class="summary-value" id="present-count">0</div>
+                    <div class="summary-label">出席</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="absent-count">0</div>
+                    <div class="summary-label">缺席</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="total-students">0</div>
+                    <div class="summary-label">總人數</div>
+                </div>
+            </div>
+            
+            <div class="student-table">
+                <div class="table-header">
+                    <div class="header-name">姓名</div>
+                    <div class="header-actions">出席狀況</div>
+                </div>
+                <div id="attendance-students-list" class="students-list">
+                    <!-- Attendance students will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Scoring View -->
+        <div id="scoring-view" class="tab-content">
+            <div class="student-table">
+                <div class="table-header">
+                    <div class="header-name">姓名</div>
+                    <div class="header-actions">分數 (0-4)</div>
+                </div>
+                <div id="scoring-students-list" class="students-list">
+                    <!-- Scoring students will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state hidden">
+            <p>請選擇班級開始使用</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
