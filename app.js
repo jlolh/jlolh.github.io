@@ -1006,28 +1006,49 @@ function generateReport() {
     const attendanceRate = monthAttendance.length > 0 ? 
       Math.round((presentDays / monthAttendance.length) * 100) : 0;
     
-    // 分數統計
-    const monthScores = appData.scores.filter(s => 
-      s.studentId === student.id && s.date.startsWith(yearMonth)
-    );
-    const avgScore = monthScores.length > 0 ? 
-      Math.round(monthScores.reduce((sum, s) => sum + s.score, 0) / monthScores.length) : 0;
-    const totalScore = monthScores.reduce((sum, s) => sum + s.score, 0);
-    
-    totalAttendance += presentDays;
-    totalAbsent += absentDays;
-    if (avgScore > 0) totalScores.push(avgScore);
-    
-    reportData.push({
-      studentName: student.name,
-      className: classData ? classData.name : '未分班',
-      presentDays,
-      absentDays,
-      attendanceRate,
-      avgScore,
-      totalScore
-    });
-  });
+    /// 計分畫面
+const scoreList = $('scoringList');
+scoreList.innerHTML = '';
+students.forEach(s => {
+  const li = document.createElement('li');
+  const span = document.createElement('span');
+  span.textContent = s.name;
+  li.appendChild(span);
+
+  // 分數按鈕 0~4，只能擇一高亮
+  for (let i = 0; i <= 4; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    btn.className = 'scoreBtn';
+    if ((appData.scores[date]?.[s.id] ?? '') === i) btn.classList.add('active');
+    btn.onclick = () => {
+      appData.scores[date] = appData.scores[date] || {};
+      appData.scores[date][s.id] = i;
+      renderView();
+    };
+    li.appendChild(btn);
+  }
+
+  // 刪除按鈕
+  const delBtn = document.createElement('button');
+  delBtn.textContent = '✖';
+  delBtn.title = '刪除學生';
+  delBtn.style.background = 'gray';
+  delBtn.style.color = 'white';
+  delBtn.style.marginLeft = '10px';
+  delBtn.onclick = () => {
+    if (confirm(`確定要刪除「${s.name}」嗎？`)) {
+      appData.students = appData.students.filter(st => st.id !== s.id);
+      Object.keys(appData.attendance).forEach(d => delete appData.attendance[d][s.id]);
+      Object.keys(appData.scores).forEach(d => delete appData.scores[d][s.id]);
+      renderView();
+    }
+  };
+  li.appendChild(delBtn);
+
+  scoreList.appendChild(li);
+});
+
   
   // 更新摘要
   const summaryContainer = document.getElementById('report-summary');
