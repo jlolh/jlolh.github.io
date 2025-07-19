@@ -3,82 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>學校點名與計分系統</title>
+    <title>學校點名與計分管理系統</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>學校點名與計分系統</h1>
-            <button id="reset-data-btn" class="btn btn--secondary">重置資料</button>
-        </header>
-
-        <!-- Navigation Tabs -->
-        <div class="tab-nav">
-            <button class="tab-btn active" data-tab="attendance">點名</button>
-            <button class="tab-btn" data-tab="scoring">計分</button>
+    <!-- 側邊導航 -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-school"></i> 學校管理系統</h2>
         </div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="nav-link active" data-page="dashboard"><i class="fas fa-home"></i> 首頁</a></li>
+            <li><a href="#" class="nav-link" data-page="classes"><i class="fas fa-chalkboard"></i> 班級管理</a></li>
+            <li><a href="#" class="nav-link" data-page="students"><i class="fas fa-user-graduate"></i> 學生管理</a></li>
+            <li><a href="#" class="nav-link" data-page="attendance"><i class="fas fa-calendar-check"></i> 日常點名</a></li>
+            <li><a href="#" class="nav-link" data-page="scoring"><i class="fas fa-star"></i> 表現評分</a></li>
+            <li><a href="#" class="nav-link" data-page="reports"><i class="fas fa-chart-bar"></i> 月度報表</a></li>
+        </ul>
+    </nav>
 
-        <!-- Common Controls -->
-        <div class="common-controls">
-            <div class="control-group">
-                <label for="date-select" class="form-label">選擇日期：</label>
-                <input type="date" id="date-select" class="form-control">
+    <!-- 主內容區 -->
+    <div class="main-content">
+        <!-- 頁面：首頁 -->
+        <div id="dashboard" class="page active">
+            <div class="page-header">
+                <h1>系統概覽</h1>
+                <p>歡迎使用學校點名與計分管理系統</p>
             </div>
-            <div class="control-group">
-                <label for="class-select" class="form-label">選擇班級：</label>
-                <select id="class-select" class="form-control">
-                    <option value="">請選擇班級</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Attendance View -->
-        <div id="attendance-view" class="tab-content active">
-            <div class="summary-panel">
-                <div class="summary-card">
-                    <div class="summary-value" id="present-count">0</div>
-                    <div class="summary-label">出席</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-chalkboard"></i></div>
+                    <div class="stat-info">
+                        <h3 id="total-classes">0</h3>
+                        <p>總班級數</p>
+                    </div>
                 </div>
-                <div class="summary-card">
-                    <div class="summary-value" id="absent-count">0</div>
-                    <div class="summary-label">缺席</div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                    <div class="stat-info">
+                        <h3 id="total-students">0</h3>
+                        <p>總學生數</p>
+                    </div>
                 </div>
-                <div class="summary-card">
-                    <div class="summary-value" id="total-students">0</div>
-                    <div class="summary-label">總人數</div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                    <div class="stat-info">
+                        <h3 id="today-attendance">0%</h3>
+                        <p>今日出席率</p>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="student-table">
-                <div class="table-header">
-                    <div class="header-name">姓名</div>
-                    <div class="header-actions">出席狀況</div>
-                </div>
-                <div id="attendance-students-list" class="students-list">
-                    <!-- Attendance students will be populated here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Scoring View -->
-        <div id="scoring-view" class="tab-content">
-            <div class="student-table">
-                <div class="table-header">
-                    <div class="header-name">姓名</div>
-                    <div class="header-actions">分數 (0-4)</div>
-                </div>
-                <div id="scoring-students-list" class="students-list">
-                    <!-- Scoring students will be populated here -->
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                    <div class="stat-info">
+                        <h3 id="avg-score">0</h3>
+                        <p>平均分數</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Empty State -->
-        <div id="empty-state" class="empty-state hidden">
-            <p>請選擇班級開始使用</p>
+        <!-- 頁面：班級管理 -->
+        <div id="classes" class="page">
+            <div class="page-header">
+                <h1>班級管理</h1>
+                <button class="btn btn--primary" id="add-class-btn"><i class="fas fa-plus"></i> 新增班級</button>
+            </div>
+            <div class="classes-grid" id="classes-grid">
+                <!-- 班級卡片將動態生成 -->
+            </div>
+        </div>
+
+        <!-- 頁面：學生管理 -->
+        <div id="students" class="page">
+            <div class="page-header">
+                <h1>學生管理</h1>
+                <div class="flex gap-16">
+                    <select class="form-control" id="student-class-filter" style="width: 200px;">
+                        <option value="">所有班級</option>
+                    </select>
+                    <button class="btn btn--primary" id="add-student-btn"><i class="fas fa-plus"></i> 新增學生</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table" id="students-table">
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>班級</th>
+                            <th>最後出席</th>
+                            <th>本月總分</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 頁面：日常點名 -->
+        <div id="attendance" class="page">
+            <div class="page-header">
+                <h1>日常點名</h1>
+                <div class="flex gap-16">
+                    <select class="form-control" id="attendance-class-select" style="width: 200px;">
+                        <option value="">選擇班級</option>
+                    </select>
+                    <input type="date" class="form-control" id="attendance-date" style="width: 180px;">
+                    <button class="btn btn--secondary" id="mark-all-present">全部出席</button>
+                    <button class="btn btn--outline" id="mark-all-absent">全部缺席</button>
+                    <button class="btn btn--primary" id="save-attendance">儲存點名</button>
+                </div>
+            </div>
+            <div class="attendance-list" id="attendance-list">
+                <!-- 學生點名列表將動態生成 -->
+            </div>
+        </div>
+
+        <!-- 頁面：表現評分 -->
+        <div id="scoring" class="page">
+            <div class="page-header">
+                <h1>表現評分</h1>
+                <div class="flex gap-16">
+                    <select class="form-control" id="scoring-class-select" style="width: 200px;">
+                        <option value="">選擇班級</option>
+                    </select>
+                    <input type="date" class="form-control" id="scoring-date" style="width: 180px;">
+                    <select class="form-control" id="scoring-category" style="width: 150px;">
+                        <option value="">評分項目</option>
+                    </select>
+                    <button class="btn btn--primary" id="save-scores">儲存評分</button>
+                </div>
+            </div>
+            <div class="scoring-list" id="scoring-list">
+                <!-- 學生評分列表將動態生成 -->
+            </div>
+        </div>
+
+        <!-- 頁面：月度報表 -->
+        <div id="reports" class="page">
+            <div class="page-header">
+                <h1>月度報表</h1>
+                <div class="flex gap-16">
+                    <select class="form-control" id="report-year" style="width: 120px;"></select>
+                    <select class="form-control" id="report-month" style="width: 120px;"></select>
+                    <button class="btn btn--primary" id="generate-report">生成報表</button>
+                    <button class="btn btn--secondary" id="export-report">匯出 CSV</button>
+                </div>
+            </div>
+            <div id="report-content">
+                <div class="report-summary" id="report-summary">
+                    <!-- 報表摘要 -->
+                </div>
+                <div class="table-container">
+                    <table class="data-table" id="report-table">
+                        <thead>
+                            <tr>
+                                <th>學生姓名</th>
+                                <th>班級</th>
+                                <th>出席天數</th>
+                                <th>缺席天數</th>
+                                <th>出席率</th>
+                                <th>平均分數</th>
+                                <th>總分</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- 模態框 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification-container"></div>
 
     <script src="app.js"></script>
 </body>
