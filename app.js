@@ -1,1164 +1,881 @@
-// 全局資料儲存
-let appData = {
-  classes: [
-    {
-      id: "class_1",
-      name: "一年級甲班",
-      createdAt: "2025-01-15",
-      updatedAt: "2025-01-19"
-    },
-    {
-      id: "class_2", 
-      name: "一年級乙班",
-      createdAt: "2025-01-15",
-      updatedAt: "2025-01-19"
-    },
-    {
-      id: "class_3",
-      name: "二年級甲班", 
-      createdAt: "2025-01-16",
-      updatedAt: "2025-01-19"
+// 學校點名與計分系統 JavaScript
+
+class SchoolAttendanceSystem {
+    constructor() {
+        // 初始化數據
+        this.data = {
+            "classes": [
+                {
+                    "id": 1,
+                    "name": "小學一年甲班",
+                    "students": [
+                        {
+                            "id": 1,
+                            "name": "張小明",
+                            "attendance": [
+                                {"date": "2025-07-19", "present": true, "score": 3},
+                                {"date": "2025-07-18", "present": true, "score": 4},
+                                {"date": "2025-07-17", "present": false, "score": 0}
+                            ]
+                        },
+                        {
+                            "id": 2,
+                            "name": "李小華",
+                            "attendance": [
+                                {"date": "2025-07-19", "present": true, "score": 4},
+                                {"date": "2025-07-18", "present": true, "score": 3},
+                                {"date": "2025-07-17", "present": true, "score": 4}
+                            ]
+                        },
+                        {
+                            "id": 3,
+                            "name": "王小美",
+                            "attendance": [
+                                {"date": "2025-07-19", "present": false, "score": 0},
+                                {"date": "2025-07-18", "present": true, "score": 2},
+                                {"date": "2025-07-17", "present": true, "score": 3}
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": 2,
+                    "name": "小學一年乙班",
+                    "students": [
+                        {
+                            "id": 4,
+                            "name": "陳小強",
+                            "attendance": [
+                                {"date": "2025-07-19", "present": true, "score": 4},
+                                {"date": "2025-07-18", "present": true, "score": 3}
+                            ]
+                        },
+                        {
+                            "id": 5,
+                            "name": "林小芳",
+                            "attendance": [
+                                {"date": "2025-07-19", "present": true, "score": 2},
+                                {"date": "2025-07-18", "present": false, "score": 0}
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "currentDate": "2025-07-19",
+            "systemSettings": {
+                "maxScore": 4,
+                "minScore": 0,
+                "scoreLabel": "日常表現"
+            }
+        };
+
+        this.currentView = 'dashboard';
+        this.currentClassId = null;
+        this.currentStudentId = null;
+        this.currentEditId = null;
+        this.todayAttendance = {};
+
+        this.init();
     }
-  ],
-  students: [
-    {
-      id: "student_1",
-      name: "王小明",
-      classId: "class_1", 
-      createdAt: "2025-01-15",
-      updatedAt: "2025-01-19"
-    },
-    {
-      id: "student_2",
-      name: "李小華",
-      classId: "class_1",
-      createdAt: "2025-01-15", 
-      updatedAt: "2025-01-19"
-    },
-    {
-      id: "student_3",
-      name: "張小美",
-      classId: "class_1",
-      createdAt: "2025-01-15",
-      updatedAt: "2025-01-19"
-    },
-    {
-      id: "student_4", 
-      name: "陳小強",
-      classId: "class_2",
-      createdAt: "2025-01-16",
-      updatedAt: "2025-01-19"
-    },
-    {
-      id: "student_5",
-      name: "劉小芳", 
-      classId: "class_2",
-      createdAt: "2025-01-16",
-      updatedAt: "2025-01-19"
-    },
-    {
-      id: "student_6",
-      name: "黃小傑",
-      classId: "class_3",
-      createdAt: "2025-01-17",
-      updatedAt: "2025-01-19"
+
+    init() {
+        this.setupEventListeners();
+        this.updateCurrentDate();
+        this.renderDashboard();
+        this.populateSelects();
     }
-  ],
-  attendance: [
-    {
-      id: "att_1",
-      studentId: "student_1",
-      date: "2025-01-19", 
-      status: "present",
-      recordedAt: "2025-01-19T08:30:00"
-    },
-    {
-      id: "att_2",
-      studentId: "student_2",
-      date: "2025-01-19",
-      status: "present", 
-      recordedAt: "2025-01-19T08:30:00"
-    },
-    {
-      id: "att_3", 
-      studentId: "student_3",
-      date: "2025-01-19",
-      status: "absent",
-      recordedAt: "2025-01-19T08:30:00"
-    },
-    {
-      id: "att_4",
-      studentId: "student_1",
-      date: "2025-01-18",
-      status: "present",
-      recordedAt: "2025-01-18T08:30:00" 
-    },
-    {
-      id: "att_5",
-      studentId: "student_2", 
-      date: "2025-01-18",
-      status: "absent",
-      recordedAt: "2025-01-18T08:30:00"
+
+    setupEventListeners() {
+        // 導航按鈕
+        document.getElementById('reportBtn').addEventListener('click', () => this.showReportView());
+        document.getElementById('manageBtn').addEventListener('click', () => this.showManagementView());
+        document.getElementById('backToMain').addEventListener('click', () => this.showDashboardView());
+        document.getElementById('backToMainFromReport').addEventListener('click', () => this.showDashboardView());
+        document.getElementById('backToMainFromManage').addEventListener('click', () => this.showDashboardView());
+
+        // 班級管理
+        document.getElementById('addClassBtn').addEventListener('click', () => this.showAddClassModal());
+        document.getElementById('confirmAddClass').addEventListener('click', () => this.addNewClass());
+
+        // 出席操作
+        document.getElementById('markAllPresent').addEventListener('click', () => this.markAllAttendance(true));
+        document.getElementById('markAllAbsent').addEventListener('click', () => this.markAllAttendance(false));
+        document.getElementById('saveAttendance').addEventListener('click', () => this.saveAttendanceData());
+
+        // 管理標籤
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.switchTab(e.target.dataset.tab));
+        });
+
+        // 學生班級選擇
+        document.getElementById('studentClassSelect').addEventListener('change', (e) => {
+            this.renderStudentManagement(e.target.value);
+        });
+
+        // 報表篩選
+        document.getElementById('monthSelect').addEventListener('change', () => this.renderReports());
+        document.getElementById('classFilter').addEventListener('change', () => this.renderReports());
+
+        // 模態框
+        this.setupModalListeners();
+
+        // 確認模態框
+        document.getElementById('confirmAction').addEventListener('click', () => this.executeConfirmedAction());
+
+        // 編輯班級
+        document.getElementById('confirmEditClass').addEventListener('click', () => this.updateClass());
+
+        // 學生管理
+        document.getElementById('confirmAddStudent').addEventListener('click', () => this.addNewStudent());
+        document.getElementById('confirmEditStudent').addEventListener('click', () => this.updateStudent());
     }
-  ],
-  scores: [
-    {
-      id: "score_1",
-      studentId: "student_1",
-      date: "2025-01-19",
-      category: "作業表現",
-      score: 85,
-      maxScore: 100,
-      recordedAt: "2025-01-19T10:00:00"
-    },
-    {
-      id: "score_2", 
-      studentId: "student_1",
-      date: "2025-01-19",
-      category: "課堂參與",
-      score: 90,
-      maxScore: 100,
-      recordedAt: "2025-01-19T11:00:00"
-    },
-    {
-      id: "score_3",
-      studentId: "student_2",
-      date: "2025-01-19", 
-      category: "作業表現",
-      score: 78,
-      maxScore: 100,
-      recordedAt: "2025-01-19T10:00:00"
-    },
-    {
-      id: "score_4",
-      studentId: "student_2",
-      date: "2025-01-18",
-      category: "紀律表現",
-      score: 92,
-      maxScore: 100,
-      recordedAt: "2025-01-18T14:00:00"
+
+    setupModalListeners() {
+        // 模態框關閉按鈕
+        document.querySelectorAll('.modal-close, .btn[data-modal]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const modalId = e.target.getAttribute('data-modal') || e.target.closest('[data-modal]')?.getAttribute('data-modal');
+                if (modalId) {
+                    this.hideModal(modalId);
+                }
+            });
+        });
+
+        // 點擊外部關閉模態框
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.hideModal(modal.id);
+                }
+            });
+        });
     }
-  ],
-  scoreCategories: [
-    "作業表現",
-    "課堂參與", 
-    "紀律表現",
-    "考試成績",
-    "團隊合作"
-  ]
-};
 
-// 工具函數
-function generateId(prefix) {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-function formatDate(date) {
-  if (typeof date === 'string') {
-    date = new Date(date);
-  }
-  return date.toISOString().split('T')[0];
-}
-
-function getCurrentDate() {
-  return formatDate(new Date());
-}
-
-function showNotification(message, type = 'info') {
-  const container = document.getElementById('notification-container');
-  const notification = document.createElement('div');
-  notification.className = `notification ${type}`;
-  
-  const icon = type === 'success' ? 'check-circle' : 
-               type === 'error' ? 'exclamation-triangle' : 
-               type === 'warning' ? 'exclamation-triangle' : 'info-circle';
-  
-  notification.innerHTML = `
-    <i class="fas fa-${icon}"></i>
-    <span>${message}</span>
-  `;
-  
-  container.appendChild(notification);
-  
-  setTimeout(() => {
-    notification.style.animation = 'slideOutRight 0.3s ease-in forwards';
-    setTimeout(() => {
-      container.removeChild(notification);
-    }, 300);
-  }, 3000);
-}
-
-// 更新所有下拉選單
-function updateAllDropdowns() {
-  updateClassDropdowns();
-  updateScoringCategories();
-}
-
-// 更新班級下拉選單
-function updateClassDropdowns() {
-  const dropdowns = [
-    'student-class-filter',
-    'attendance-class-select', 
-    'scoring-class-select'
-  ];
-  
-  dropdowns.forEach(dropdownId => {
-    const dropdown = document.getElementById(dropdownId);
-    if (dropdown) {
-      const currentValue = dropdown.value;
-      const defaultOption = dropdown.querySelector('option[value=""]').textContent;
-      
-      dropdown.innerHTML = `<option value="">${defaultOption}</option>`;
-      appData.classes.forEach(classData => {
-        dropdown.innerHTML += `<option value="${classData.id}">${classData.name}</option>`;
-      });
-      
-      // 恢復之前選擇的值
-      if (currentValue) {
-        dropdown.value = currentValue;
-      }
+    updateCurrentDate() {
+        const today = new Date();
+        const dateString = today.toLocaleDateString('zh-TW', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long'
+        });
+        document.getElementById('currentDate').textContent = dateString;
     }
-  });
-}
 
-// 更新評分項目下拉選單
-function updateScoringCategories() {
-  const categorySelect = document.getElementById('scoring-category');
-  if (categorySelect) {
-    const currentValue = categorySelect.value;
-    categorySelect.innerHTML = '<option value="">評分項目</option>';
-    appData.scoreCategories.forEach(category => {
-      categorySelect.innerHTML += `<option value="${category}">${category}</option>`;
-    });
-    
-    if (currentValue) {
-      categorySelect.value = currentValue;
+    // 視圖切換
+    showView(viewId) {
+        document.querySelectorAll('.view').forEach(view => {
+            view.classList.remove('active');
+        });
+        document.getElementById(viewId).classList.add('active');
+        this.currentView = viewId;
     }
-  }
-}
 
-// 模態框功能
-function showModal(content) {
-  const modal = document.getElementById('modal');
-  const modalBody = document.getElementById('modal-body');
-  modalBody.innerHTML = content;
-  modal.classList.add('show');
-}
-
-function hideModal() {
-  const modal = document.getElementById('modal');
-  modal.classList.remove('show');
-}
-
-function showConfirmDialog(title, message, onConfirm) {
-  const content = `
-    <div class="confirm-dialog">
-      <i class="fas fa-exclamation-triangle icon"></i>
-      <h3>${title}</h3>
-      <p>${message}</p>
-      <div class="confirm-actions">
-        <button class="btn btn--secondary" onclick="hideModal()">取消</button>
-        <button class="btn btn--primary" onclick="handleConfirm()">確認</button>
-      </div>
-    </div>
-  `;
-  showModal(content);
-  window.currentConfirmAction = onConfirm;
-}
-
-function handleConfirm() {
-  if (window.currentConfirmAction) {
-    window.currentConfirmAction();
-    window.currentConfirmAction = null;
-  }
-  hideModal();
-}
-
-// 導航功能
-function initNavigation() {
-  const navLinks = document.querySelectorAll('.nav-link');
-  const pages = document.querySelectorAll('.page');
-  
-  navLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const targetPage = link.getAttribute('data-page');
-      
-      // 更新導航狀態
-      navLinks.forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
-      
-      // 切換頁面
-      pages.forEach(page => page.classList.remove('active'));
-      document.getElementById(targetPage).classList.add('active');
-      
-      // 載入頁面資料
-      loadPageData(targetPage);
-    });
-  });
-  
-  // 模態框關閉
-  document.querySelector('.close').addEventListener('click', hideModal);
-  document.getElementById('modal').addEventListener('click', (e) => {
-    if (e.target.id === 'modal') {
-      hideModal();
+    showDashboardView() {
+        this.showView('dashboardView');
+        this.renderDashboard();
     }
-  });
-}
 
-// 載入頁面資料
-function loadPageData(pageName) {
-  switch(pageName) {
-    case 'dashboard':
-      loadDashboard();
-      break;
-    case 'classes':
-      loadClasses();
-      break;
-    case 'students':
-      loadStudents();
-      break;
-    case 'attendance':
-      loadAttendance();
-      break;
-    case 'scoring':
-      loadScoring();
-      break;
-    case 'reports':
-      loadReports();
-      break;
-  }
-}
-
-// 首頁統計
-function loadDashboard() {
-  const totalClasses = appData.classes.length;
-  const totalStudents = appData.students.length;
-  
-  // 計算今日出席率
-  const today = getCurrentDate();
-  const todayAttendance = appData.attendance.filter(att => att.date === today);
-  const presentToday = todayAttendance.filter(att => att.status === 'present').length;
-  const totalToday = todayAttendance.length;
-  const todayRate = totalToday > 0 ? Math.round((presentToday / totalToday) * 100) : 0;
-  
-  // 計算平均分數
-  const allScores = appData.scores.map(s => s.score);
-  const avgScore = allScores.length > 0 ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
-  
-  document.getElementById('total-classes').textContent = totalClasses;
-  document.getElementById('total-students').textContent = totalStudents;
-  document.getElementById('today-attendance').textContent = `${todayRate}%`;
-  document.getElementById('avg-score').textContent = avgScore;
-}
-
-// 班級管理
-function loadClasses() {
-  const grid = document.getElementById('classes-grid');
-  grid.innerHTML = '';
-  
-  if (appData.classes.length === 0) {
-    grid.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-chalkboard"></i>
-        <h3>尚未建立班級</h3>
-        <p>點擊「新增班級」按鈕開始建立您的第一個班級</p>
-      </div>
-    `;
-    return;
-  }
-  
-  appData.classes.forEach(classData => {
-    const studentCount = appData.students.filter(s => s.classId === classData.id).length;
-    const card = document.createElement('div');
-    card.className = 'class-card';
-    card.innerHTML = `
-      <h3>${classData.name}</h3>
-      <div class="class-info">
-        <p><i class="fas fa-users"></i> 學生人數：${studentCount} 人</p>
-        <p><i class="fas fa-calendar"></i> 建立日期：${classData.createdAt}</p>
-        <p><i class="fas fa-edit"></i> 最後更新：${classData.updatedAt}</p>
-      </div>
-      <div class="class-actions">
-        <button class="btn btn--sm btn--secondary" onclick="editClass('${classData.id}')">
-          <i class="fas fa-edit"></i> 編輯
-        </button>
-        <button class="btn btn--sm btn--outline" onclick="deleteClass('${classData.id}')">
-          <i class="fas fa-trash"></i> 刪除
-        </button>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
-}
-
-function showAddClassForm() {
-  const content = `
-    <h3>新增班級</h3>
-    <form id="add-class-form">
-      <div class="form-group">
-        <label class="form-label">班級名稱</label>
-        <input type="text" class="form-control" id="class-name" required placeholder="請輸入班級名稱">
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn btn--secondary" onclick="hideModal()">取消</button>
-        <button type="submit" class="btn btn--primary">確認新增</button>
-      </div>
-    </form>
-  `;
-  showModal(content);
-  
-  document.getElementById('add-class-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('class-name').value.trim();
-    if (name) {
-      const newClass = {
-        id: generateId('class'),
-        name: name,
-        createdAt: getCurrentDate(),
-        updatedAt: getCurrentDate()
-      };
-      appData.classes.push(newClass);
-      loadClasses();
-      updateAllDropdowns(); // 更新所有下拉選單
-      hideModal();
-      showNotification('班級新增成功！', 'success');
+    showClassDetailView(classId) {
+        this.currentClassId = classId;
+        this.showView('classDetailView');
+        this.renderClassDetail(classId);
     }
-  });
-}
 
-function editClass(classId) {
-  const classData = appData.classes.find(c => c.id === classId);
-  if (!classData) return;
-  
-  const content = `
-    <h3>編輯班級</h3>
-    <form id="edit-class-form">
-      <div class="form-group">
-        <label class="form-label">班級名稱</label>
-        <input type="text" class="form-control" id="edit-class-name" required value="${classData.name}">
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn btn--secondary" onclick="hideModal()">取消</button>
-        <button type="submit" class="btn btn--primary">確認修改</button>
-      </div>
-    </form>
-  `;
-  showModal(content);
-  
-  document.getElementById('edit-class-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('edit-class-name').value.trim();
-    if (name) {
-      classData.name = name;
-      classData.updatedAt = getCurrentDate();
-      loadClasses();
-      updateAllDropdowns(); // 更新所有下拉選單
-      hideModal();
-      showNotification('班級修改成功！', 'success');
+    showReportView() {
+        this.showView('reportView');
+        this.renderReports();
     }
-  });
-}
 
-function deleteClass(classId) {
-  const classData = appData.classes.find(c => c.id === classId);
-  const studentCount = appData.students.filter(s => s.classId === classId).length;
-  
-  if (studentCount > 0) {
-    showNotification('無法刪除：該班級還有學生，請先轉移學生至其他班級', 'error');
-    return;
-  }
-  
-  showConfirmDialog(
-    '確認刪除班級',
-    `您確定要刪除「${classData.name}」嗎？此操作無法復原。`,
-    () => {
-      appData.classes = appData.classes.filter(c => c.id !== classId);
-      loadClasses();
-      updateAllDropdowns(); // 更新所有下拉選單
-      showNotification('班級刪除成功！', 'success');
+    showManagementView() {
+        this.showView('managementView');
+        this.renderClassManagement();
+        this.populateSelects();
+        // 確保學生管理標籤顯示初始內容
+        this.renderStudentManagement('');
     }
-  );
-}
 
-// 學生管理
-function loadStudents() {
-  // 載入班級選項
-  updateClassDropdowns();
-  
-  // 載入學生表格
-  updateStudentsTable();
-  
-  // 班級過濾
-  const classFilter = document.getElementById('student-class-filter');
-  classFilter.removeEventListener('change', updateStudentsTable); // 移除舊監聽器
-  classFilter.addEventListener('change', updateStudentsTable);
-}
+    // 渲染主頁面
+    renderDashboard() {
+        const classesList = document.getElementById('classesList');
+        classesList.innerHTML = '';
 
-function updateStudentsTable() {
-  const tableBody = document.querySelector('#students-table tbody');
-  const selectedClassId = document.getElementById('student-class-filter').value;
-  
-  let filteredStudents = appData.students;
-  if (selectedClassId) {
-    filteredStudents = appData.students.filter(s => s.classId === selectedClassId);
-  }
-  
-  tableBody.innerHTML = '';
-  
-  if (filteredStudents.length === 0) {
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="5" style="text-align: center; padding: 40px;">
-          <div class="empty-state">
-            <i class="fas fa-user-graduate"></i>
-            <h3>尚無學生資料</h3>
-            <p>點擊「新增學生」按鈕開始新增學生</p>
-          </div>
-        </td>
-      </tr>
-    `;
-    return;
-  }
-  
-  filteredStudents.forEach(student => {
-    const classData = appData.classes.find(c => c.id === student.classId);
-    const lastAttendance = appData.attendance
-      .filter(att => att.studentId === student.id)
-      .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-    
-    const currentMonth = getCurrentDate().substr(0, 7); // YYYY-MM
-    const monthlyScores = appData.scores.filter(s => 
-      s.studentId === student.id && s.date.startsWith(currentMonth)
-    );
-    const totalScore = monthlyScores.reduce((sum, s) => sum + s.score, 0);
-    
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${student.name}</td>
-      <td>${classData ? classData.name : '未分班'}</td>
-      <td>${lastAttendance ? lastAttendance.date : '無記錄'}</td>
-      <td>${totalScore}</td>
-      <td>
-        <div class="action-buttons">
-          <button class="btn btn--sm btn--secondary" onclick="editStudent('${student.id}')">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn--sm btn--outline" onclick="transferStudent('${student.id}')">
-            <i class="fas fa-exchange-alt"></i>
-          </button>
-          <button class="btn btn--sm btn--outline" onclick="deleteStudent('${student.id}')">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      </td>
-    `;
-    tableBody.appendChild(row);
-  });
-}
+        this.data.classes.forEach(classObj => {
+            const studentCount = classObj.students.length;
+            const todayAttendance = this.getTodayAttendanceCount(classObj.id);
+            
+            const classCard = document.createElement('div');
+            classCard.className = 'class-card';
+            classCard.innerHTML = `
+                <h3>${classObj.name}</h3>
+                <div class="class-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">${studentCount}</span>
+                        <span class="stat-label">學生人數</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${todayAttendance.present}</span>
+                        <span class="stat-label">今日出席</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${todayAttendance.absent}</span>
+                        <span class="stat-label">今日缺席</span>
+                    </div>
+                </div>
+                <div class="class-actions">
+                    <button class="btn btn--primary btn--full-width">進入班級</button>
+                </div>
+            `;
 
-function showAddStudentForm() {
-  const content = `
-    <h3>新增學生</h3>
-    <form id="add-student-form">
-      <div class="form-group">
-        <label class="form-label">學生姓名</label>
-        <input type="text" class="form-control" id="student-name" required placeholder="請輸入學生姓名">
-      </div>
-      <div class="form-group">
-        <label class="form-label">所屬班級</label>
-        <select class="form-control" id="student-class" required>
-          <option value="">請選擇班級</option>
-          ${appData.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn btn--secondary" onclick="hideModal()">取消</button>
-        <button type="submit" class="btn btn--primary">確認新增</button>
-      </div>
-    </form>
-  `;
-  showModal(content);
-  
-  document.getElementById('add-student-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('student-name').value.trim();
-    const classId = document.getElementById('student-class').value;
-    
-    if (name && classId) {
-      const newStudent = {
-        id: generateId('student'),
-        name: name,
-        classId: classId,
-        createdAt: getCurrentDate(),
-        updatedAt: getCurrentDate()
-      };
-      appData.students.push(newStudent);
-      updateStudentsTable();
-      hideModal();
-      showNotification('學生新增成功！', 'success');
+            classCard.addEventListener('click', () => this.showClassDetailView(classObj.id));
+            classesList.appendChild(classCard);
+        });
     }
-  });
-}
 
-function editStudent(studentId) {
-  const student = appData.students.find(s => s.id === studentId);
-  if (!student) return;
-  
-  const content = `
-    <h3>編輯學生</h3>
-    <form id="edit-student-form">
-      <div class="form-group">
-        <label class="form-label">學生姓名</label>
-        <input type="text" class="form-control" id="edit-student-name" required value="${student.name}">
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn btn--secondary" onclick="hideModal()">取消</button>
-        <button type="submit" class="btn btn--primary">確認修改</button>
-      </div>
-    </form>
-  `;
-  showModal(content);
-  
-  document.getElementById('edit-student-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('edit-student-name').value.trim();
-    if (name) {
-      student.name = name;
-      student.updatedAt = getCurrentDate();
-      updateStudentsTable();
-      hideModal();
-      showNotification('學生資料修改成功！', 'success');
+    // 渲染班級詳情
+    renderClassDetail(classId) {
+        const classObj = this.data.classes.find(c => c.id === classId);
+        if (!classObj) return;
+
+        document.getElementById('classTitle').textContent = classObj.name;
+        
+        const studentsList = document.getElementById('studentsList');
+        studentsList.innerHTML = '';
+
+        // 初始化今日出席數據
+        if (!this.todayAttendance[classId]) {
+            this.todayAttendance[classId] = {};
+        }
+
+        classObj.students.forEach(student => {
+            const todayRecord = student.attendance.find(a => a.date === this.data.currentDate);
+            const currentPresent = this.todayAttendance[classId][student.id]?.present ?? todayRecord?.present ?? true;
+            const currentScore = this.todayAttendance[classId][student.id]?.score ?? todayRecord?.score ?? 0;
+
+            // 更新緩存
+            this.todayAttendance[classId][student.id] = {
+                present: currentPresent,
+                score: currentScore
+            };
+
+            const studentItem = document.createElement('div');
+            studentItem.className = 'student-item';
+            studentItem.innerHTML = `
+                <div class="student-header">
+                    <h4 class="student-name">${student.name}</h4>
+                </div>
+                <div class="student-controls">
+                    <div class="attendance-section">
+                        <div class="section-label">出席狀況</div>
+                        <div class="attendance-buttons">
+                            <button class="attendance-btn ${currentPresent ? 'present' : ''}" 
+                                    data-student="${student.id}" data-action="present">出席</button>
+                            <button class="attendance-btn ${!currentPresent ? 'absent' : ''}" 
+                                    data-student="${student.id}" data-action="absent">缺席</button>
+                        </div>
+                    </div>
+                    <div class="score-section">
+                        <div class="section-label">日常表現 (0-4分)</div>
+                        <div class="score-input">
+                            ${[0,1,2,3,4].map(score => 
+                                `<button class="score-btn ${currentScore === score ? 'active' : ''}" 
+                                         data-student="${student.id}" data-score="${score}">${score}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 添加事件監聽器
+            const attendanceBtns = studentItem.querySelectorAll('.attendance-btn');
+            attendanceBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const studentId = parseInt(e.target.dataset.student);
+                    const isPresent = e.target.dataset.action === 'present';
+                    this.updateAttendance(classId, studentId, isPresent);
+                    this.refreshStudentItem(studentItem, student, classId);
+                });
+            });
+
+            const scoreBtns = studentItem.querySelectorAll('.score-btn');
+            scoreBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const studentId = parseInt(e.target.dataset.student);
+                    const score = parseInt(e.target.dataset.score);
+                    this.updateScore(classId, studentId, score);
+                    this.refreshStudentItem(studentItem, student, classId);
+                });
+            });
+
+            studentsList.appendChild(studentItem);
+        });
     }
-  });
-}
 
-function transferStudent(studentId) {
-  const student = appData.students.find(s => s.id === studentId);
-  if (!student) return;
-  
-  const currentClass = appData.classes.find(c => c.id === student.classId);
-  const otherClasses = appData.classes.filter(c => c.id !== student.classId);
-  
-  const content = `
-    <h3>轉班學生</h3>
-    <p>學生：<strong>${student.name}</strong></p>
-    <p>目前班級：<strong>${currentClass ? currentClass.name : '未分班'}</strong></p>
-    <form id="transfer-student-form">
-      <div class="form-group">
-        <label class="form-label">轉至班級</label>
-        <select class="form-control" id="transfer-class" required>
-          <option value="">請選擇目標班級</option>
-          ${otherClasses.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn btn--secondary" onclick="hideModal()">取消</button>
-        <button type="submit" class="btn btn--primary">確認轉班</button>
-      </div>
-    </form>
-  `;
-  showModal(content);
-  
-  document.getElementById('transfer-student-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const newClassId = document.getElementById('transfer-class').value;
-    if (newClassId) {
-      student.classId = newClassId;
-      student.updatedAt = getCurrentDate();
-      updateStudentsTable();
-      hideModal();
-      showNotification('學生轉班成功！', 'success');
+    refreshStudentItem(studentItem, student, classId) {
+        const attendance = this.todayAttendance[classId][student.id];
+        
+        // 更新出席按鈕
+        const attendanceBtns = studentItem.querySelectorAll('.attendance-btn');
+        attendanceBtns.forEach(btn => {
+            btn.classList.remove('present', 'absent');
+            if (btn.dataset.action === 'present' && attendance.present) {
+                btn.classList.add('present');
+            } else if (btn.dataset.action === 'absent' && !attendance.present) {
+                btn.classList.add('absent');
+            }
+        });
+
+        // 更新分數按鈕
+        const scoreBtns = studentItem.querySelectorAll('.score-btn');
+        scoreBtns.forEach(btn => {
+            btn.classList.remove('active');
+            if (parseInt(btn.dataset.score) === attendance.score) {
+                btn.classList.add('active');
+            }
+        });
     }
-  });
-}
 
-function deleteStudent(studentId) {
-  const student = appData.students.find(s => s.id === studentId);
-  
-  showConfirmDialog(
-    '確認刪除學生',
-    `您確定要刪除學生「${student.name}」嗎？此操作將同時刪除該學生的所有出席記錄和分數記錄。`,
-    () => {
-      // 刪除學生及相關記錄
-      appData.students = appData.students.filter(s => s.id !== studentId);
-      appData.attendance = appData.attendance.filter(att => att.studentId !== studentId);
-      appData.scores = appData.scores.filter(score => score.studentId !== studentId);
-      updateStudentsTable();
-      showNotification('學生刪除成功！', 'success');
+    updateAttendance(classId, studentId, isPresent) {
+        if (!this.todayAttendance[classId]) {
+            this.todayAttendance[classId] = {};
+        }
+        if (!this.todayAttendance[classId][studentId]) {
+            this.todayAttendance[classId][studentId] = { present: true, score: 0 };
+        }
+        this.todayAttendance[classId][studentId].present = isPresent;
+        
+        // 如果缺席，分數設為0
+        if (!isPresent) {
+            this.todayAttendance[classId][studentId].score = 0;
+        }
     }
-  );
-}
 
-// 點名管理
-function loadAttendance() {
-  // 載入班級選項
-  updateClassDropdowns();
-  
-  // 設定預設日期為今天
-  document.getElementById('attendance-date').value = getCurrentDate();
-  
-  // 移除舊事件監聽器並添加新的
-  const classSelect = document.getElementById('attendance-class-select');
-  const dateInput = document.getElementById('attendance-date');
-  
-  classSelect.removeEventListener('change', updateAttendanceList);
-  dateInput.removeEventListener('change', updateAttendanceList);
-  
-  classSelect.addEventListener('change', updateAttendanceList);
-  dateInput.addEventListener('change', updateAttendanceList);
-  
-  // 初始加載
-  updateAttendanceList();
-}
-
-function updateAttendanceList() {
-  const classId = document.getElementById('attendance-class-select').value;
-  const date = document.getElementById('attendance-date').value;
-  const listContainer = document.getElementById('attendance-list');
-  
-  if (!classId || !date) {
-    listContainer.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-calendar-check"></i>
-        <h3>請選擇班級和日期</h3>
-        <p>選擇班級和日期後開始點名</p>
-      </div>
-    `;
-    return;
-  }
-  
-  const classStudents = appData.students.filter(s => s.classId === classId);
-  
-  if (classStudents.length === 0) {
-    listContainer.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-user-graduate"></i>
-        <h3>該班級尚無學生</h3>
-        <p>請先新增學生至該班級</p>
-      </div>
-    `;
-    return;
-  }
-  
-  listContainer.innerHTML = '';
-  
-  classStudents.forEach(student => {
-    const existingAttendance = appData.attendance.find(att => 
-      att.studentId === student.id && att.date === date
-    );
-    
-    const attendanceItem = document.createElement('div');
-    attendanceItem.className = 'attendance-item';
-    attendanceItem.innerHTML = `
-      <span class="student-name">${student.name}</span>
-      <div class="attendance-buttons">
-        <button class="attendance-btn present ${existingAttendance?.status === 'present' ? 'active' : ''}" 
-                data-student="${student.id}" data-status="present">
-          <i class="fas fa-check"></i> 出席
-        </button>
-        <button class="attendance-btn absent ${existingAttendance?.status === 'absent' ? 'active' : ''}" 
-                data-student="${student.id}" data-status="absent">
-          <i class="fas fa-times"></i> 缺席
-        </button>
-      </div>
-    `;
-    listContainer.appendChild(attendanceItem);
-  });
-  
-  // 添加點擊事件
-  document.querySelectorAll('.attendance-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const studentId = btn.getAttribute('data-student');
-      const status = btn.getAttribute('data-status');
-      const parentButtons = btn.parentElement.querySelectorAll('.attendance-btn');
-      
-      // 更新按鈕狀態
-      parentButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      // 儲存到暫存
-      btn.parentElement.setAttribute('data-attendance', JSON.stringify({
-        studentId: studentId,
-        status: status
-      }));
-    });
-  });
-}
-
-function markAllAttendance(status) {
-  const buttons = document.querySelectorAll(`.attendance-btn.${status}`);
-  buttons.forEach(btn => btn.click());
-}
-
-function saveAttendance() {
-  const date = document.getElementById('attendance-date').value;
-  const classId = document.getElementById('attendance-class-select').value;
-  
-  if (!classId || !date) {
-    showNotification('請選擇班級和日期', 'error');
-    return;
-  }
-  
-  const attendanceData = [];
-  document.querySelectorAll('.attendance-buttons').forEach(buttonGroup => {
-    const data = buttonGroup.getAttribute('data-attendance');
-    if (data) {
-      attendanceData.push(JSON.parse(data));
+    updateScore(classId, studentId, score) {
+        if (!this.todayAttendance[classId]) {
+            this.todayAttendance[classId] = {};
+        }
+        if (!this.todayAttendance[classId][studentId]) {
+            this.todayAttendance[classId][studentId] = { present: true, score: 0 };
+        }
+        this.todayAttendance[classId][studentId].score = score;
     }
-  });
-  
-  if (attendanceData.length === 0) {
-    showNotification('請至少為一位學生標記出席狀態', 'warning');
-    return;
-  }
-  
-  // 刪除當日該班級的現有記錄
-  appData.attendance = appData.attendance.filter(att => 
-    !(att.date === date && appData.students.find(s => s.id === att.studentId && s.classId === classId))
-  );
-  
-  // 新增新記錄
-  attendanceData.forEach(data => {
-    appData.attendance.push({
-      id: generateId('att'),
-      studentId: data.studentId,
-      date: date,
-      status: data.status,
-      recordedAt: new Date().toISOString()
-    });
-  });
-  
-  showNotification(`成功儲存 ${attendanceData.length} 位學生的出席記錄`, 'success');
-  updateAttendanceList();
-}
 
-// 評分管理
-function loadScoring() {
-  // 載入班級選項和評分項目
-  updateClassDropdowns();
-  updateScoringCategories();
-  
-  // 設定預設日期
-  document.getElementById('scoring-date').value = getCurrentDate();
-  
-  // 移除舊事件監聽器並添加新的
-  const classSelect = document.getElementById('scoring-class-select');
-  const dateInput = document.getElementById('scoring-date');
-  const categorySelect = document.getElementById('scoring-category');
-  
-  classSelect.removeEventListener('change', updateScoringList);
-  dateInput.removeEventListener('change', updateScoringList);
-  categorySelect.removeEventListener('change', updateScoringList);
-  
-  classSelect.addEventListener('change', updateScoringList);
-  dateInput.addEventListener('change', updateScoringList);
-  categorySelect.addEventListener('change', updateScoringList);
-  
-  // 初始加載
-  updateScoringList();
-}
+    markAllAttendance(isPresent) {
+        if (!this.currentClassId) return;
+        
+        const classObj = this.data.classes.find(c => c.id === this.currentClassId);
+        if (!classObj) return;
 
-function updateScoringList() {
-  const classId = document.getElementById('scoring-class-select').value;
-  const date = document.getElementById('scoring-date').value;
-  const category = document.getElementById('scoring-category').value;
-  const listContainer = document.getElementById('scoring-list');
-  
-  if (!classId || !date || !category) {
-    listContainer.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-star"></i>
-        <h3>請選擇班級、日期和評分項目</h3>
-        <p>選擇完整資訊後開始評分</p>
-      </div>
-    `;
-    return;
-  }
-  
-  const classStudents = appData.students.filter(s => s.classId === classId);
-  
-  if (classStudents.length === 0) {
-    listContainer.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-user-graduate"></i>
-        <h3>該班級尚無學生</h3>
-        <p>請先新增學生至該班級</p>
-      </div>
-    `;
-    return;
-  }
-  
-  listContainer.innerHTML = '';
-  
-  classStudents.forEach(student => {
-    const existingScore = appData.scores.find(score => 
-      score.studentId === student.id && 
-      score.date === date && 
-      score.category === category
-    );
-    
-    const scoringItem = document.createElement('div');
-    scoringItem.className = 'scoring-item';
-    scoringItem.innerHTML = `
-      <span class="student-name">${student.name}</span>
-      <div class="score-input-container">
-        <input type="number" class="score-input" min="0" max="100" 
-               value="${existingScore ? existingScore.score : ''}"
-               data-student="${student.id}" placeholder="分數">
-        <span style="margin-left: 8px; color: var(--color-text-secondary);">/ 100</span>
-      </div>
-    `;
-    listContainer.appendChild(scoringItem);
-  });
-}
+        classObj.students.forEach(student => {
+            this.updateAttendance(this.currentClassId, student.id, isPresent);
+        });
 
-function saveScores() {
-  const classId = document.getElementById('scoring-class-select').value;
-  const date = document.getElementById('scoring-date').value;
-  const category = document.getElementById('scoring-category').value;
-  
-  if (!classId || !date || !category) {
-    showNotification('請選擇班級、日期和評分項目', 'error');
-    return;
-  }
-  
-  const scoreInputs = document.querySelectorAll('.score-input');
-  const scoresToSave = [];
-  
-  scoreInputs.forEach(input => {
-    const score = parseInt(input.value);
-    const studentId = input.getAttribute('data-student');
-    
-    if (!isNaN(score) && score >= 0 && score <= 100) {
-      scoresToSave.push({ studentId, score });
+        this.renderClassDetail(this.currentClassId);
     }
-  });
-  
-  if (scoresToSave.length === 0) {
-    showNotification('請至少輸入一個有效分數 (0-100)', 'warning');
-    return;
-  }
-  
-  // 刪除現有記錄
-  appData.scores = appData.scores.filter(s => 
-    !(s.date === date && s.category === category && 
-      scoresToSave.some(score => score.studentId === s.studentId))
-  );
-  
-  // 新增新記錄
-  scoresToSave.forEach(data => {
-    appData.scores.push({
-      id: generateId('score'),
-      studentId: data.studentId,
-      date: date,
-      category: category,
-      score: data.score,
-      maxScore: 100,
-      recordedAt: new Date().toISOString()
-    });
-  });
-  
-  showNotification(`成功儲存 ${scoresToSave.length} 位學生的評分記錄`, 'success');
-  updateScoringList();
-}
 
-// 月度報表
-function loadReports() {
-  // 載入年月選項
-  const yearSelect = document.getElementById('report-year');
-  const monthSelect = document.getElementById('report-month');
-  
-  const currentYear = new Date().getFullYear();
-  yearSelect.innerHTML = '';
-  for (let year = currentYear - 2; year <= currentYear + 1; year++) {
-    yearSelect.innerHTML += `<option value="${year}">${year}年</option>`;
-  }
-  yearSelect.value = currentYear;
-  
-  monthSelect.innerHTML = '';
-  for (let month = 1; month <= 12; month++) {
-    monthSelect.innerHTML += `<option value="${month.toString().padStart(2, '0')}">${month}月</option>`;
-  }
-  monthSelect.value = (new Date().getMonth() + 1).toString().padStart(2, '0');
-}
+    saveAttendanceData() {
+        if (!this.currentClassId || !this.todayAttendance[this.currentClassId]) {
+            this.showMessage('沒有要儲存的資料', 'error');
+            return;
+        }
 
-function generateReport() {
-  const year = document.getElementById('report-year').value;
-  const month = document.getElementById('report-month').value;
-  const yearMonth = `${year}-${month}`;
-  
-  // 計算報表資料
-  const reportData = [];
-  let totalAttendance = 0;
-  let totalAbsent = 0;
-  let totalScores = [];
-  
-  appData.students.forEach(student => {
-    const classData = appData.classes.find(c => c.id === student.classId);
-    
-    // 出席統計
-    const monthAttendance = appData.attendance.filter(att => 
-      att.studentId === student.id && att.date.startsWith(yearMonth)
-    );
-    const presentDays = monthAttendance.filter(att => att.status === 'present').length;
-    const absentDays = monthAttendance.filter(att => att.status === 'absent').length;
-    const attendanceRate = monthAttendance.length > 0 ? 
-      Math.round((presentDays / monthAttendance.length) * 100) : 0;
-    
-    /// 計分畫面
-const scoreList = $('scoringList');
-scoreList.innerHTML = '';
-students.forEach(s => {
-  const li = document.createElement('li');
-  const span = document.createElement('span');
-  span.textContent = s.name;
-  li.appendChild(span);
+        const classObj = this.data.classes.find(c => c.id === this.currentClassId);
+        if (!classObj) return;
 
-  // 分數按鈕 0~4，只能擇一高亮
-  for (let i = 0; i <= 4; i++) {
-    const btn = document.createElement('button');
-    btn.textContent = i;
-    btn.className = 'scoreBtn';
-    if ((appData.scores[date]?.[s.id] ?? '') === i) btn.classList.add('active');
-    btn.onclick = () => {
-      appData.scores[date] = appData.scores[date] || {};
-      appData.scores[date][s.id] = i;
-      renderView();
-    };
-    li.appendChild(btn);
-  }
+        // 更新學生資料
+        classObj.students.forEach(student => {
+            const todayData = this.todayAttendance[this.currentClassId][student.id];
+            if (todayData) {
+                // 移除今日既有記錄
+                student.attendance = student.attendance.filter(a => a.date !== this.data.currentDate);
+                // 添加新記錄
+                student.attendance.push({
+                    date: this.data.currentDate,
+                    present: todayData.present,
+                    score: todayData.score
+                });
+            }
+        });
 
-  // 刪除按鈕
-  const delBtn = document.createElement('button');
-  delBtn.textContent = '✖';
-  delBtn.title = '刪除學生';
-  delBtn.style.background = 'gray';
-  delBtn.style.color = 'white';
-  delBtn.style.marginLeft = '10px';
-  delBtn.onclick = () => {
-    if (confirm(`確定要刪除「${s.name}」嗎？`)) {
-      appData.students = appData.students.filter(st => st.id !== s.id);
-      Object.keys(appData.attendance).forEach(d => delete appData.attendance[d][s.id]);
-      Object.keys(appData.scores).forEach(d => delete appData.scores[d][s.id]);
-      renderView();
+        // 清除緩存
+        delete this.todayAttendance[this.currentClassId];
+
+        this.showMessage('出席記錄已成功儲存！', 'success');
+        this.renderClassDetail(this.currentClassId);
     }
-  };
-  li.appendChild(delBtn);
 
-  scoreList.appendChild(li);
-});
+    // 計算今日出席情況
+    getTodayAttendanceCount(classId) {
+        const classObj = this.data.classes.find(c => c.id === classId);
+        if (!classObj) return { present: 0, absent: 0 };
 
-  
-  // 更新摘要
-  const summaryContainer = document.getElementById('report-summary');
-  const overallAvgScore = totalScores.length > 0 ? 
-    Math.round(totalScores.reduce((a, b) => a + b, 0) / totalScores.length) : 0;
-  const overallAttendanceRate = (totalAttendance + totalAbsent) > 0 ? 
-    Math.round((totalAttendance / (totalAttendance + totalAbsent)) * 100) : 0;
-  
-  summaryContainer.innerHTML = `
-    <div class="summary-card">
-      <h4>${reportData.length}</h4>
-      <p>總學生數</p>
-    </div>
-    <div class="summary-card">
-      <h4>${overallAttendanceRate}%</h4>
-      <p>整體出席率</p>
-    </div>
-    <div class="summary-card">
-      <h4>${overallAvgScore}</h4>
-      <p>平均分數</p>
-    </div>
-    <div class="summary-card">
-      <h4>${totalAttendance}</h4>
-      <p>總出席人次</p>
-    </div>
-  `;
-  
-  // 更新表格
-  const tableBody = document.querySelector('#report-table tbody');
-  tableBody.innerHTML = '';
-  
-  if (reportData.length === 0) {
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="7" style="text-align: center; padding: 40px;">
-          <div class="empty-state">
-            <i class="fas fa-chart-bar"></i>
-            <h3>無資料</h3>
-            <p>所選月份無任何記錄</p>
-          </div>
-        </td>
-      </tr>
-    `;
-    return;
-  }
-  
-  reportData.forEach(data => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${data.studentName}</td>
-      <td>${data.className}</td>
-      <td>${data.presentDays}</td>
-      <td>${data.absentDays}</td>
-      <td>${data.attendanceRate}%</td>
-      <td>${data.avgScore}</td>
-      <td>${data.totalScore}</td>
-    `;
-    tableBody.appendChild(row);
-  });
-  
-  // 儲存報表資料以供匯出
-  window.currentReportData = reportData;
-}
+        let present = 0, absent = 0;
 
-function exportReport() {
-  if (!window.currentReportData) {
-    showNotification('請先生成報表', 'warning');
-    return;
-  }
-  
-  const year = document.getElementById('report-year').value;
-  const month = document.getElementById('report-month').value;
-  
-  // 建立 CSV 內容
-  const headers = ['學生姓名', '班級', '出席天數', '缺席天數', '出席率', '平均分數', '總分'];
-  const csvContent = [
-    headers.join(','),
-    ...window.currentReportData.map(data => [
-      data.studentName,
-      data.className,
-      data.presentDays,
-      data.absentDays,
-      `${data.attendanceRate}%`,
-      data.avgScore,
-      data.totalScore
-    ].join(','))
-  ].join('\n');
-  
-  // 下載檔案
-  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `月度報表_${year}年${month}月.csv`;
-  link.click();
-  
-  showNotification('報表匯出成功！', 'success');
+        classObj.students.forEach(student => {
+            const todayRecord = student.attendance.find(a => a.date === this.data.currentDate);
+            const cachedRecord = this.todayAttendance[classId]?.[student.id];
+            
+            const isPresent = cachedRecord ? cachedRecord.present : (todayRecord ? todayRecord.present : true);
+            
+            if (isPresent) {
+                present++;
+            } else {
+                absent++;
+            }
+        });
+
+        return { present, absent };
+    }
+
+    // 渲染報表
+    renderReports() {
+        const selectedMonth = document.getElementById('monthSelect').value;
+        const selectedClass = document.getElementById('classFilter').value;
+        const reportContent = document.getElementById('reportContent');
+        
+        let classesToShow = this.data.classes;
+        if (selectedClass) {
+            classesToShow = this.data.classes.filter(c => c.id.toString() === selectedClass);
+        }
+
+        reportContent.innerHTML = '';
+
+        classesToShow.forEach(classObj => {
+            const reportClass = document.createElement('div');
+            reportClass.className = 'report-class';
+
+            const monthlyStats = this.calculateMonthlyStats(classObj, selectedMonth);
+
+            reportClass.innerHTML = `
+                <div class="report-class-header">
+                    <h3 class="report-class-title">${classObj.name} - ${selectedMonth}</h3>
+                </div>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>學生姓名</th>
+                            <th>出席天數</th>
+                            <th>缺席天數</th>
+                            <th>出席率</th>
+                            <th>總分</th>
+                            <th>平均分</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${monthlyStats.map(stat => `
+                            <tr>
+                                <td>${stat.name}</td>
+                                <td>${stat.presentDays}</td>
+                                <td>${stat.absentDays}</td>
+                                <td><span class="attendance-percentage ${this.getAttendanceClass(stat.attendanceRate)}">${stat.attendanceRate}%</span></td>
+                                <td>${stat.totalScore}</td>
+                                <td>${stat.avgScore}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            reportContent.appendChild(reportClass);
+        });
+    }
+
+    calculateMonthlyStats(classObj, month) {
+        return classObj.students.map(student => {
+            const monthAttendance = student.attendance.filter(a => a.date.startsWith(month));
+            const presentDays = monthAttendance.filter(a => a.present).length;
+            const absentDays = monthAttendance.filter(a => !a.present).length;
+            const totalDays = monthAttendance.length;
+            const attendanceRate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+            const totalScore = monthAttendance.reduce((sum, a) => sum + a.score, 0);
+            const avgScore = totalDays > 0 ? (totalScore / totalDays).toFixed(1) : '0.0';
+
+            return {
+                name: student.name,
+                presentDays,
+                absentDays,
+                attendanceRate,
+                totalScore,
+                avgScore
+            };
+        });
+    }
+
+    getAttendanceClass(rate) {
+        if (rate >= 90) return 'high';
+        if (rate >= 70) return 'medium';
+        return 'low';
+    }
+
+    // 班級管理
+    renderClassManagement() {
+        const list = document.getElementById('classManagementList');
+        list.innerHTML = '';
+
+        this.data.classes.forEach(classObj => {
+            const item = document.createElement('div');
+            item.className = 'management-item';
+            item.innerHTML = `
+                <div class="management-item-info">
+                    <h4 class="management-item-name">${classObj.name}</h4>
+                    <div class="management-item-meta">${classObj.students.length} 位學生</div>
+                </div>
+                <div class="management-actions">
+                    <button class="btn btn--sm btn--outline" onclick="app.editClass(${classObj.id})">編輯</button>
+                    <button class="btn btn--sm btn--outline" onclick="app.confirmDeleteClass(${classObj.id})">刪除</button>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    renderStudentManagement(classId) {
+        const list = document.getElementById('studentManagementList');
+        if (!classId) {
+            list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--color-text-secondary);">請選擇班級以管理學生</div>';
+            return;
+        }
+
+        const classObj = this.data.classes.find(c => c.id.toString() === classId);
+        if (!classObj) {
+            list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--color-text-secondary);">找不到指定班級</div>';
+            return;
+        }
+
+        list.innerHTML = '';
+
+        // 添加班級標題和新增學生按鈕
+        const headerDiv = document.createElement('div');
+        headerDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;';
+        headerDiv.innerHTML = `
+            <h4 style="margin: 0;">${classObj.name} 學生管理</h4>
+            <button class="btn btn--primary btn--sm" onclick="app.showAddStudentModal(${classId})">新增學生</button>
+        `;
+        list.appendChild(headerDiv);
+
+        // 添加學生列表
+        if (classObj.students.length === 0) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.style.cssText = 'text-align: center; padding: 20px; color: var(--color-text-secondary); background: var(--color-surface); border-radius: var(--radius-base); border: 1px solid var(--color-card-border);';
+            emptyDiv.textContent = '此班級尚無學生';
+            list.appendChild(emptyDiv);
+        } else {
+            classObj.students.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'management-item';
+                item.innerHTML = `
+                    <div class="management-item-info">
+                        <h4 class="management-item-name">${student.name}</h4>
+                        <div class="management-item-meta">學號: ${student.id} | 出席記錄: ${student.attendance.length} 天</div>
+                    </div>
+                    <div class="management-actions">
+                        <button class="btn btn--sm btn--outline" onclick="app.editStudent(${student.id})">編輯</button>
+                        <button class="btn btn--sm btn--outline" onclick="app.confirmDeleteStudent(${student.id})">刪除</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+    }
+
+    // 標籤切換
+    switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(`${tabName}ManagementTab`).classList.add('active');
+
+        if (tabName === 'students') {
+            // 重置學生班級選擇器並顯示初始狀態
+            const studentClassSelect = document.getElementById('studentClassSelect');
+            studentClassSelect.selectedIndex = 0;
+            this.renderStudentManagement('');
+        }
+    }
+
+    // 填充選項
+    populateSelects() {
+        const classFilter = document.getElementById('classFilter');
+        const studentClassSelect = document.getElementById('studentClassSelect');
+        const moveStudentClass = document.getElementById('moveStudentClass');
+
+        // 清空現有選項
+        [classFilter, studentClassSelect, moveStudentClass].forEach(select => {
+            if (select) {
+                const firstOption = select.querySelector('option');
+                select.innerHTML = '';
+                if (firstOption) {
+                    select.appendChild(firstOption);
+                }
+            }
+        });
+
+        // 添加班級選項
+        this.data.classes.forEach(classObj => {
+            [classFilter, studentClassSelect, moveStudentClass].forEach(select => {
+                if (select) {
+                    const option = document.createElement('option');
+                    option.value = classObj.id;
+                    option.textContent = classObj.name;
+                    select.appendChild(option);
+                }
+            });
+        });
+    }
+
+    // 模態框操作
+    showModal(modalId) {
+        document.getElementById(modalId).classList.add('active');
+    }
+
+    hideModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+        // 清空表單
+        const modal = document.getElementById(modalId);
+        const inputs = modal.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            if (input.type === 'text') {
+                input.value = '';
+            } else if (input.tagName === 'SELECT') {
+                input.selectedIndex = 0;
+            }
+        });
+    }
+
+    showAddClassModal() {
+        this.showModal('addClassModal');
+    }
+
+    addNewClass() {
+        const name = document.getElementById('newClassName').value.trim();
+        if (!name) {
+            this.showMessage('請輸入班級名稱', 'error');
+            return;
+        }
+
+        const newId = Math.max(...this.data.classes.map(c => c.id)) + 1;
+        this.data.classes.push({
+            id: newId,
+            name: name,
+            students: []
+        });
+
+        this.hideModal('addClassModal');
+        this.showMessage('班級新增成功！', 'success');
+        this.renderDashboard();
+        this.populateSelects();
+        
+        if (this.currentView === 'managementView') {
+            this.renderClassManagement();
+        }
+    }
+
+    editClass(id) {
+        const classObj = this.data.classes.find(c => c.id === id);
+        if (!classObj) return;
+
+        this.currentEditId = id;
+        document.getElementById('editClassName').value = classObj.name;
+        this.showModal('editClassModal');
+    }
+
+    updateClass() {
+        const name = document.getElementById('editClassName').value.trim();
+        if (!name) {
+            this.showMessage('請輸入班級名稱', 'error');
+            return;
+        }
+
+        const classObj = this.data.classes.find(c => c.id === this.currentEditId);
+        if (classObj) {
+            classObj.name = name;
+            this.hideModal('editClassModal');
+            this.showMessage('班級更新成功！', 'success');
+            this.renderDashboard();
+            this.populateSelects();
+            
+            if (this.currentView === 'managementView') {
+                this.renderClassManagement();
+            }
+        }
+    }
+
+    confirmDeleteClass(id) {
+        const classObj = this.data.classes.find(c => c.id === id);
+        if (!classObj) return;
+
+        this.currentEditId = id;
+        document.getElementById('confirmTitle').textContent = '刪除班級';
+        document.getElementById('confirmMessage').textContent = `確定要刪除班級「${classObj.name}」嗎？此操作無法復原。`;
+        this.pendingAction = 'deleteClass';
+        this.showModal('confirmModal');
+    }
+
+    deleteClass() {
+        this.data.classes = this.data.classes.filter(c => c.id !== this.currentEditId);
+        this.hideModal('confirmModal');
+        this.showMessage('班級刪除成功！', 'success');
+        this.renderDashboard();
+        this.populateSelects();
+        
+        if (this.currentView === 'managementView') {
+            this.renderClassManagement();
+        }
+    }
+
+    // 學生管理
+    showAddStudentModal(classId) {
+        this.currentClassId = classId;
+        this.showModal('addStudentModal');
+    }
+
+    addNewStudent() {
+        const name = document.getElementById('newStudentName').value.trim();
+        if (!name) {
+            this.showMessage('請輸入學生姓名', 'error');
+            return;
+        }
+
+        const classObj = this.data.classes.find(c => c.id === this.currentClassId);
+        if (!classObj) return;
+
+        const newId = Math.max(...this.data.classes.flatMap(c => c.students.map(s => s.id))) + 1;
+        classObj.students.push({
+            id: newId,
+            name: name,
+            attendance: []
+        });
+
+        this.hideModal('addStudentModal');
+        this.showMessage('學生新增成功！', 'success');
+        this.renderStudentManagement(this.currentClassId.toString());
+        this.renderDashboard();
+    }
+
+    editStudent(id) {
+        const student = this.findStudentById(id);
+        if (!student.student) return;
+
+        this.currentEditId = id;
+        document.getElementById('editStudentName').value = student.student.name;
+        
+        // 填充轉移班級選項
+        const moveSelect = document.getElementById('moveStudentClass');
+        moveSelect.innerHTML = '<option value="">保持目前班級</option>';
+        this.data.classes.forEach(classObj => {
+            if (classObj.id !== student.classObj.id) {
+                const option = document.createElement('option');
+                option.value = classObj.id;
+                option.textContent = classObj.name;
+                moveSelect.appendChild(option);
+            }
+        });
+
+        this.showModal('editStudentModal');
+    }
+
+    updateStudent() {
+        const name = document.getElementById('editStudentName').value.trim();
+        const moveToClassId = document.getElementById('moveStudentClass').value;
+        
+        if (!name) {
+            this.showMessage('請輸入學生姓名', 'error');
+            return;
+        }
+
+        const studentData = this.findStudentById(this.currentEditId);
+        if (!studentData.student) return;
+
+        // 更新姓名
+        studentData.student.name = name;
+
+        // 移動班級
+        if (moveToClassId) {
+            const targetClass = this.data.classes.find(c => c.id.toString() === moveToClassId);
+            if (targetClass) {
+                // 從原班級移除
+                studentData.classObj.students = studentData.classObj.students.filter(s => s.id !== this.currentEditId);
+                // 添加到新班級
+                targetClass.students.push(studentData.student);
+            }
+        }
+
+        this.hideModal('editStudentModal');
+        this.showMessage('學生資料更新成功！', 'success');
+        this.renderStudentManagement(document.getElementById('studentClassSelect').value);
+        this.renderDashboard();
+    }
+
+    confirmDeleteStudent(id) {
+        const studentData = this.findStudentById(id);
+        if (!studentData.student) return;
+
+        this.currentEditId = id;
+        document.getElementById('confirmTitle').textContent = '刪除學生';
+        document.getElementById('confirmMessage').textContent = `確定要刪除學生「${studentData.student.name}」嗎？此操作無法復原。`;
+        this.pendingAction = 'deleteStudent';
+        this.showModal('confirmModal');
+    }
+
+    deleteStudent() {
+        const studentData = this.findStudentById(this.currentEditId);
+        if (!studentData.student) return;
+
+        studentData.classObj.students = studentData.classObj.students.filter(s => s.id !== this.currentEditId);
+        this.hideModal('confirmModal');
+        this.showMessage('學生刪除成功！', 'success');
+        this.renderStudentManagement(document.getElementById('studentClassSelect').value);
+        this.renderDashboard();
+    }
+
+    findStudentById(id) {
+        for (const classObj of this.data.classes) {
+            const student = classObj.students.find(s => s.id === id);
+            if (student) {
+                return { student, classObj };
+            }
+        }
+        return { student: null, classObj: null };
+    }
+
+    executeConfirmedAction() {
+        switch (this.pendingAction) {
+            case 'deleteClass':
+                this.deleteClass();
+                break;
+            case 'deleteStudent':
+                this.deleteStudent();
+                break;
+        }
+        this.pendingAction = null;
+    }
+
+    showMessage(text, type) {
+        // 移除現有訊息
+        const existingMessage = document.querySelector('.message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+
+        const message = document.createElement('div');
+        message.className = `message ${type}`;
+        message.textContent = text;
+
+        const container = document.querySelector('.container');
+        container.insertBefore(message, container.firstChild);
+
+        // 3秒後自動移除
+        setTimeout(() => {
+            if (message.parentNode) {
+                message.remove();
+            }
+        }, 3000);
+    }
 }
 
 // 初始化應用程式
+let app;
 document.addEventListener('DOMContentLoaded', () => {
-  initNavigation();
-  loadDashboard();
-  
-  // 事件監聽器
-  document.getElementById('add-class-btn').addEventListener('click', showAddClassForm);
-  document.getElementById('add-student-btn').addEventListener('click', showAddStudentForm);
-  document.getElementById('mark-all-present').addEventListener('click', () => markAllAttendance('present'));
-  document.getElementById('mark-all-absent').addEventListener('click', () => markAllAttendance('absent'));
-  document.getElementById('save-attendance').addEventListener('click', saveAttendance);
-  document.getElementById('save-scores').addEventListener('click', saveScores);
-  document.getElementById('generate-report').addEventListener('click', generateReport);
-  document.getElementById('export-report').addEventListener('click', exportReport);
+    app = new SchoolAttendanceSystem();
 });

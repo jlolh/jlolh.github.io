@@ -7,76 +7,207 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>學校點名與計分系統</h1>
-            <button id="reset-data-btn" class="btn btn--secondary">重置資料</button>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="container">
+                <h1>學校點名與計分系統</h1>
+                <div class="header-actions">
+                    <span id="currentDate" class="current-date"></span>
+                    <button class="btn btn--secondary btn--sm" id="reportBtn">月結報表</button>
+                    <button class="btn btn--outline btn--sm" id="manageBtn">管理</button>
+                </div>
+            </div>
         </header>
 
-        <!-- Navigation Tabs -->
-        <div class="tab-nav">
-            <button class="tab-btn active" data-tab="attendance">點名</button>
-            <button class="tab-btn" data-tab="scoring">計分</button>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <!-- Dashboard View -->
+                <div id="dashboardView" class="view active">
+                    <div class="dashboard-header">
+                        <h2>班級列表</h2>
+                        <button class="btn btn--primary" id="addClassBtn">新增班級</button>
+                    </div>
+                    <div id="classesList" class="classes-grid">
+                        <!-- Classes will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Class Detail View -->
+                <div id="classDetailView" class="view">
+                    <div class="class-detail-header">
+                        <button class="btn btn--outline" id="backToMain">返回</button>
+                        <h2 id="classTitle">班級詳情</h2>
+                        <div class="quick-actions">
+                            <button class="btn btn--sm btn--secondary" id="markAllPresent">全部出席</button>
+                            <button class="btn btn--sm btn--outline" id="markAllAbsent">全部缺席</button>
+                            <button class="btn btn--sm btn--primary" id="saveAttendance">儲存</button>
+                        </div>
+                    </div>
+                    <div id="studentsList" class="students-list">
+                        <!-- Students will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Monthly Report View -->
+                <div id="reportView" class="view">
+                    <div class="report-header">
+                        <button class="btn btn--outline" id="backToMainFromReport">返回</button>
+                        <h2>月結報表</h2>
+                        <div class="report-controls">
+                            <select class="form-control" id="monthSelect">
+                                <option value="2025-07">2025年7月</option>
+                                <option value="2025-06">2025年6月</option>
+                            </select>
+                            <select class="form-control" id="classFilter">
+                                <option value="">所有班級</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="reportContent" class="report-content">
+                        <!-- Report will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Management View -->
+                <div id="managementView" class="view">
+                    <div class="management-header">
+                        <button class="btn btn--outline" id="backToMainFromManage">返回</button>
+                        <h2>系統管理</h2>
+                    </div>
+                    <div class="management-tabs">
+                        <button class="tab-btn active" data-tab="classes">班級管理</button>
+                        <button class="tab-btn" data-tab="students">學生管理</button>
+                    </div>
+                    <div id="classManagementTab" class="tab-content active">
+                        <div class="management-section">
+                            <h3>班級管理</h3>
+                            <div id="classManagementList" class="management-list">
+                                <!-- Class management items will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div id="studentManagementTab" class="tab-content">
+                        <div class="management-section">
+                            <h3>學生管理</h3>
+                            <div class="student-class-selector">
+                                <label class="form-label">選擇班級：</label>
+                                <select class="form-control" id="studentClassSelect">
+                                    <option value="">選擇班級</option>
+                                </select>
+                            </div>
+                            <div id="studentManagementList" class="management-list">
+                                <!-- Student management items will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Modals -->
+        <!-- Add Class Modal -->
+        <div id="addClassModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>新增班級</h3>
+                    <button class="modal-close" data-modal="addClassModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">班級名稱：</label>
+                        <input type="text" class="form-control" id="newClassName" placeholder="請輸入班級名稱">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn--outline" data-modal="addClassModal">取消</button>
+                    <button class="btn btn--primary" id="confirmAddClass">確定</button>
+                </div>
+            </div>
         </div>
 
-        <!-- Common Controls -->
-        <div class="common-controls">
-            <div class="control-group">
-                <label for="date-select" class="form-label">選擇日期：</label>
-                <input type="date" id="date-select" class="form-control">
-            </div>
-            <div class="control-group">
-                <label for="class-select" class="form-label">選擇班級：</label>
-                <select id="class-select" class="form-control">
-                    <option value="">請選擇班級</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Attendance View -->
-        <div id="attendance-view" class="tab-content active">
-            <div class="summary-panel">
-                <div class="summary-card">
-                    <div class="summary-value" id="present-count">0</div>
-                    <div class="summary-label">出席</div>
+        <!-- Edit Class Modal -->
+        <div id="editClassModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>修改班級</h3>
+                    <button class="modal-close" data-modal="editClassModal">&times;</button>
                 </div>
-                <div class="summary-card">
-                    <div class="summary-value" id="absent-count">0</div>
-                    <div class="summary-label">缺席</div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">班級名稱：</label>
+                        <input type="text" class="form-control" id="editClassName">
+                    </div>
                 </div>
-                <div class="summary-card">
-                    <div class="summary-value" id="total-students">0</div>
-                    <div class="summary-label">總人數</div>
-                </div>
-            </div>
-            
-            <div class="student-table">
-                <div class="table-header">
-                    <div class="header-name">姓名</div>
-                    <div class="header-actions">出席狀況</div>
-                </div>
-                <div id="attendance-students-list" class="students-list">
-                    <!-- Attendance students will be populated here -->
+                <div class="modal-footer">
+                    <button class="btn btn--outline" data-modal="editClassModal">取消</button>
+                    <button class="btn btn--primary" id="confirmEditClass">確定</button>
                 </div>
             </div>
         </div>
 
-        <!-- Scoring View -->
-        <div id="scoring-view" class="tab-content">
-            <div class="student-table">
-                <div class="table-header">
-                    <div class="header-name">姓名</div>
-                    <div class="header-actions">分數 (0-4)</div>
+        <!-- Add Student Modal -->
+        <div id="addStudentModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>新增學生</h3>
+                    <button class="modal-close" data-modal="addStudentModal">&times;</button>
                 </div>
-                <div id="scoring-students-list" class="students-list">
-                    <!-- Scoring students will be populated here -->
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">學生姓名：</label>
+                        <input type="text" class="form-control" id="newStudentName" placeholder="請輸入學生姓名">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn--outline" data-modal="addStudentModal">取消</button>
+                    <button class="btn btn--primary" id="confirmAddStudent">確定</button>
                 </div>
             </div>
         </div>
 
-        <!-- Empty State -->
-        <div id="empty-state" class="empty-state hidden">
-            <p>請選擇班級開始使用</p>
+        <!-- Edit Student Modal -->
+        <div id="editStudentModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>修改學生資料</h3>
+                    <button class="modal-close" data-modal="editStudentModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">學生姓名：</label>
+                        <input type="text" class="form-control" id="editStudentName">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">轉移至班級：</label>
+                        <select class="form-control" id="moveStudentClass">
+                            <option value="">保持目前班級</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn--outline" data-modal="editStudentModal">取消</button>
+                    <button class="btn btn--primary" id="confirmEditStudent">確定</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div id="confirmModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="confirmTitle">確認</h3>
+                    <button class="modal-close" data-modal="confirmModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmMessage">確定要執行此操作嗎？</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn--outline" data-modal="confirmModal">取消</button>
+                    <button class="btn btn--primary" id="confirmAction">確定</button>
+                </div>
+            </div>
         </div>
     </div>
 
